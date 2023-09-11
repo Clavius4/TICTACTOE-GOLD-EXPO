@@ -9,6 +9,16 @@ import ScreenWrapper from "../components/ScreenWrapper";
 import { Color, Border, FontFamily, FontSize } from "../GlobalStyles";
 
 
+import Amplify from "@aws-amplify/core";
+import { Auth } from "aws-amplify";
+import{ withAuthenticator } from "aws-amplify-react-native";
+import config from "./screens/aws-exports";
+ 
+
+Amplify.configure(config);
+
+
+
 //copying the board
 const copyBoard = (board) => {``
   return board.map((row) => [...row]);
