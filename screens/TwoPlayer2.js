@@ -1,11 +1,13 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ToastProvider, useToast } from 'react-native-toast-message';
 import { Image } from "expo-image";
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Pressable, Text, View, ImageBackground, Alert, ToastAndroid } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { checkWinOrDraw } from '../screens/GameLogic';
+import TokenSelectionScreen from "../screens/TokenSelection"
 import { Color, Border, FontFamily, FontSize } from "../GlobalStyles";
 
 export default function TwoPlayer2(){
@@ -29,7 +31,13 @@ export default function TwoPlayer2(){
 
   const [currentTurn, setCurrentTurn] = useState("X");
   const navigation = useNavigation();
-  
+
+  const [soundVolume, setSoundVolume] = useState(0.5);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [musicMuted, setMusicMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
+  // const backgroundMusic = require('../assets/audio/game1.mp3');
+ 
   const showAlert = (title, message, buttons) => {
     Alert.alert(
       title,
@@ -41,182 +49,44 @@ export default function TwoPlayer2(){
 
   // Function to handle player's move
   const handlePlayerMove = () => {
+    // Debugging: Log the value of currentTurn
+    console.log("Current turn before update:", currentTurn);
+  
     // Toggle between "X" and "O"
-    setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-    // Toggle between dark gray and white gradient
-    setDarkGrayGradient(currentPlayer === "X");
+    setCurrentTurn(currentTurn === "X" ? "O" : "X");
   };
   
-
-  const checkWinningState = () => {
-
-    // Checking each row for a winner.
-    for (let row = 0; row < 10; row++) {
-      for (let column = 0; column <= 6; column++) {
-        const symbol = map[row][column];
-        if (symbol === "") {
-          continue;
-        }
-  
-        let isWinningSequence = true;
-        for (let i = 1; i < 5; i++) {
-          if (map[row][column + i] !== symbol) {
-            isWinningSequence = false;
-            break;
-          }
-        }
-  
-        if (isWinningSequence) {
-          const message = `Player ${symbol} wins!`;
-          showAlert(message, "Do you want to restart the game?", [
-            {
-              text: "Restart",
-              onPress: resetGame,
-              style: "default",
-            },
-            {
-              text: "Exit",
-              onPress: exitGame,
-              style: "cancel",
-            },
-          ]);
-          return;
-        }
-      }
+  const announceResult = (result) => {
+    let message;
+    if (result === 'X' || result === 'O') {
+      message = `${result} wins the game!`;
+    } else if (result === 'Draw') {
+      message = 'The game is a draw.';
     }
 
-     // Checking each column for a winner.
-     for (let column = 0; column < 10; column++) {
-      for (let row = 0; row <= 6; row++) {
-        const symbol = map[row][column];
-        if (symbol === "") {
-          continue;
-        }
-
-        let isWinningSequence = true;
-        for (let i = 1; i < 5; i++) {
-          if (map[row + i][column] !== symbol) {
-            isWinningSequence = false;
-            break;
-          }
-        }
-
-        if (isWinningSequence) {
-          const message = `Player ${symbol} wins!`;
-          showAlert(message, "Do you want to restart the game?", [
-            {
-              text: "Restart",
-              onPress: resetGame,
-              style: "default",
-            },
-            {
-              text: "Exit",
-              onPress: exitGame,
-              style: "cancel",
-            },
-          ]);
-          return;
-        }
-      }
-    }
-
-    
-    // Checking the main diagonal (top-left to bottom-right) for a winner.
-    for (let row = 0; row <= 6; row++) {
-      for (let column = 0; column <= 6; column++) {
-        const symbol = map[row][column];
-        if (symbol === "") {
-          continue;
-        }
-
-        let isWinningSequence = true;
-        for (let i = 1; i < 5; i++) {
-          if (map[row + i][column + i] !== symbol) {
-            isWinningSequence = false;
-            break;
-          }
-        }
-
-        if (isWinningSequence) {
-          const message = `Player ${symbol} wins!`;
-          showAlert(message, "Do you want to restart the game?", [
-            {
-              text: "Restart",
-              onPress: resetGame,
-              style: "default",
-            },
-            {
-              text: "Exit",
-              onPress: exitGame,
-              style: "cancel",
-            },
-          ]);
-          return;
-        }
-      }
-    }
-
-    // Checking the secondary diagonal (top-right to bottom-left) for a winner.
-    for (let row = 0; row <= 6; row++) {
-      for (let column = 9; column >= 4; column--) {
-        const symbol = map[row][column];
-        if (symbol === "") {
-          continue;
-        }
-
-        let isWinningSequence = true;
-        for (let i = 1; i < 5; i++) {
-          if (map[row + i][column - i] !== symbol) {
-            isWinningSequence = false;
-            break;
-          }
-        }
-
-        if (isWinningSequence) {
-          const message = `Player ${symbol} wins!`;
-          showAlert(message, "Do you want to restart the game?", [
-            {
-              text: "Restart",
-              onPress: resetGame,
-              style: "default",
-            },
-            {
-              text: "Exit",
-              onPress: exitGame,
-              style: "cancel",
-            },
-          ]);
-          return;
-        }
-      }
-    }
-  
-    // Check for a draw.
-    const isDraw = map.every((row) => row.every((cell) => cell !== ""));
-    if (isDraw) {
-      const message = "It's a DRAW!";
-      showAlert(message, "Do you want to restart the game?", [
+    Alert.alert(
+      'Game Over',
+      message,
+      [
         {
-          text: "Restart",
-          onPress: resetGame,
-          style: "default",
+          text: 'Restart',
+          onPress: () => {
+            resetGame();
+          },
         },
         {
-          text: "Exit",
-          onPress: exitGame,
-          style: "cancel",
-        }
-      ]);
-    }
-
-    
-  }
-
+          text: 'Exit',
+          onPress: () => {
+            navigation.navigate('HomePage');
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   const resetGame = () => {
-    // Implementing logic to reset the game state.
-    // Reseting the 'map', 'currentTurn', and any other game-related state.
-    // E.g: setMap(/* Initial game board */);
+    // Implementing map to reset the game state.
 
     setMap([   
 
@@ -238,37 +108,41 @@ export default function TwoPlayer2(){
   };
 
   const exitGame = () => {
-    // Implementing logic to exit the game or navigate back to the menu.
       // Navigating back to the menu screen
     navigation.navigate("HomePage");
   };
 
-
   const onPress = (rowIndex, columnIndex) => {
-   
+    console.log("onPress called");
+  
     if (map[rowIndex][columnIndex] !== "") {
-      //Displaying the toast message 
+      // Display a message or take appropriate action for an already occupied position
       ToastAndroid.showWithGravityAndOffset(
         'Position Occupied..!',
         ToastAndroid.SHORT,
         ToastAndroid.CENTER,
         0,
-        0,
+        0
       );
-      
-     
       return;
     }
-
+  
     setMap((existingMap) => {
       const updatedMap = [...existingMap];
       updatedMap[rowIndex][columnIndex] = currentTurn;
       return updatedMap;
     });
-
+  
     setCurrentTurn(currentTurn === "X" ? "O" : "X");
-    checkWinningState();
+
+    const winnerOrDraw = checkWinOrDraw(map, currentTurn);
+
+    if (winnerOrDraw === 'X' || winnerOrDraw === 'O' || winnerOrDraw === 'Draw') {
+      announceResult(winnerOrDraw);
+    }
+
   };
+  
 
   return (
     <ScreenWrapper>
@@ -327,7 +201,7 @@ export default function TwoPlayer2(){
       >
         <View style={styles.map}>
           {map.map((row, rowIndex)=>
-          (<View style={styles.row}>
+          (<View style={styles.row} key={`row-${rowIndex}`}>
              {row.map((cell, columnIndex)=> 
              <Pressable onPress={()=> onPress(rowIndex, columnIndex)} 
              style={styles.cell} 
@@ -350,31 +224,6 @@ export default function TwoPlayer2(){
         </View>
       </ImageBackground>
       </View>
-      {/* <View style={styles.row4}>
-        {currentTurn === 'X' ? (
-
-<LinearGradient
-style={styles.yourTurn}
-locations={[0.47, 0.47, 1]}
-colors={['#fff', '#444444', '#444444']} // Replace green with #444444
-start={{ x: 1, y: 0 }} // Start from the right
-end={{ x: 0, y: 0 }}   // End at the left
-/>
-) : (
-<LinearGradient
-style={styles.yourTurn}
-locations={[0.47, 0.47, 1]}
-colors={['#fff', '#444444', '#444444']} // Replace green with #FFD700
-start={{ x: 1, y: 0 }} // Start from the right
-end={{ x: 0, y: 0 }}   // End at the left
-/>
-)}
-
-
-
-       <Text style={[styles.playersTurn, styles.youFlexBox]}>
-        {currentTurn === "X" ? "Player 2 Turn" : "Player 1 Turn"}</Text>
-      </View> */}
     </View>
     </ScreenWrapper>
   );
@@ -565,4 +414,3 @@ const styles = StyleSheet.create({
     height:'20%',
   }
 });
-

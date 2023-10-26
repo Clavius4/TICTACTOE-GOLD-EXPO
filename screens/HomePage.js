@@ -1,26 +1,84 @@
-import * as React from "react";
+import React, { useEffect, useCallback } from "react";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import { StyleSheet, Text, View, Pressable, BackHandler, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native"; // Import useIsFocused hook
 import { FontSize, Color, FontFamily, Border } from "../GlobalStyles";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { Audio } from 'expo-av';
+
 const HomePage = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused(); // Get the focused state of the screen
+
+  const backgroundMusic = require('../assets/audio/game1.mp3');
+  const soundObject = new Audio.Sound();
+  
+  useEffect(() => {
+    const loadMusic = async () => {
+      try {
+        const status = await soundObject.loadAsync(backgroundMusic);
+        if (status.isLoaded) {
+          await soundObject.playAsync();
+        } else {
+          console.error('Sound is not loaded properly');
+        }
+      } catch (error) {
+        console.error('Error loading or playing music:', error);
+      }
+    };
+  
+    loadMusic();
+  
+    return () => {
+      soundObject.unloadAsync();
+    };
+  }, []);
+
+  const showAlert = () => {
+    Alert.alert(
+      "Exit Game",
+      "Are you sure you want to quit?",
+      [
+        {
+          text: "NO",
+          onPress: () => console.log("Cancel is pressed and back to home page"),
+          style: "cancel",
+        },
+        {
+          text: "YES",
+          onPress: () => {
+            // Perform any cleanup or actions before exiting the app if needed
+            BackHandler.exitApp();
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const handleBackButton = useCallback(() => {
+    if (navigation.isFocused()) {
+      showAlert();
+      return true; // Prevent default back button behavior only when on HomePage
+    }
+    return false; // Allow default back button behavior on other screens
+  }, []);
+
+  useEffect(() => {
+    BackHandler.addEventListener("hardwareBackPress", handleBackButton);
+    return () => {
+      BackHandler.removeEventListener("hardwareBackPress", handleBackButton);
+    };
+  }, [handleBackButton]);
+
+
 
   return (
     <ScreenWrapper>
     <View style={styles.homepage}>
-      <Text style={styles.x10}>10 x 10</Text>
-      <Text style={styles.ticTacToe}>TIC TAC TOE</Text>
-      <Text style={styles.gold}>GOLD</Text>
-      
-      <View style={styles.settingLineLightWrapper}>
-        <Pressable
-          style={styles.settingLineLight}
-          onPress={() => navigation.navigate("Settings")}
-        />
-      </View>
+    <View style={styles.row4}> 
       <View style={styles.subtractParent}>
         <Pressable
           style={styles.subtract}
@@ -53,97 +111,20 @@ const HomePage = () => {
           />
         </Pressable>
       </View>
-{/*       
+      </View>
+      
+    <View style={styles.row1}> 
+      <Text style={styles.x10}>10 x 10</Text>
+      </View>
+      <View style={styles.row2}> 
+      <Text style={styles.ticTacToe}>TIC TAC TOE</Text>
+      </View>
+      <View style={styles.row3}> 
+      <Text style={styles.gold}>GOLD</Text>
+      </View>
+      <View style={styles.row5}> 
       <Pressable
         style={[styles.button, styles.buttonLayout]}
-        onPress={() => navigation.navigate("OnePlayer")}
-      >
-        <View style={styles.buttonChildShadowBox} />
-        <View style={styles.rectangleParent}>
-          <LinearGradient
-            style={styles.frameChildPosition}
-            locations={[0, 1]}
-            colors={["#fff", "rgba(255, 255, 255, 0)"]}
-          />
-          <View style={[styles.frameItem, styles.framePosition]} />
-          <Image
-            style={[styles.frameInner, styles.frameInnerLayout]}
-            contentFit="cover"
-            source={require("../assets/ellipse-283.png")}
-          />
-          <Image
-            style={[styles.ellipseIcon, styles.frameInnerLayout]}
-            contentFit="cover"
-            source={require("../assets/ellipse-293.png")}
-          />
-          <LinearGradient
-            style={[styles.rectangleLineargradient, styles.frameChild1Position]}
-            locations={[0, 0.49, 1]}
-            colors={[
-              "rgba(255, 255, 255, 0)",
-              "#fff",
-              "rgba(255, 255, 255, 0)",
-            ]}
-          />
-          <LinearGradient
-            style={[styles.frameChild1, styles.frameChild1Position]}
-            locations={[0, 0.49, 1]}
-            colors={[
-              "rgba(255, 255, 255, 0)",
-              "#fff",
-              "rgba(255, 255, 255, 0)",
-            ]}
-          />
-          <Text style={styles.playOnline}>Play Online</Text>
-        </View>
-      </Pressable> */}
-      <Pressable
-        style={[styles.button1, styles.buttonLayout]}
-        onPress={() => navigation.navigate("TwoPlayer")}
-      >
-        <View style={styles.buttonChildShadowBox} />
-        <View style={styles.rectangleParent}>
-          <LinearGradient
-            style={styles.frameChildPosition}
-            locations={[0, 1]}
-            colors={["#fff", "rgba(255, 255, 255, 0)"]}
-          />
-          <View style={[styles.frameItem, styles.framePosition]} />
-          <Image
-            style={[styles.frameInner, styles.frameInnerLayout]}
-            contentFit="cover"
-            source={require("../assets/ellipse-283.png")}
-          />
-          <Image
-            style={[styles.ellipseIcon, styles.frameInnerLayout]}
-            contentFit="cover"
-            source={require("../assets/ellipse-293.png")}
-          />
-          <LinearGradient
-            style={[styles.rectangleLineargradient, styles.frameChild1Position]}
-            locations={[0, 0.49, 1]}
-            colors={[
-              "rgba(255, 255, 255, 0)",
-              "#fff",
-              "rgba(255, 255, 255, 0)",
-            ]}
-          />
-          <LinearGradient
-            style={[styles.frameChild1, styles.frameChild1Position]}
-            locations={[0, 0.49, 1]}
-            colors={[
-              "rgba(255, 255, 255, 0)",
-              "#fff",
-              "rgba(255, 255, 255, 0)",
-            ]}
-          />
-          <Text style={[styles.twoPlayerOnline, styles.offlineTypo]}>
-            Two Players Online
-          </Text>
-        </View>
-      </Pressable>
-      <Pressable
-        style={styles.button3}
         onPress={() => navigation.navigate("OnePlayer2")}
       >
         <View style={styles.buttonChildShadowBox} />
@@ -182,9 +163,12 @@ const HomePage = () => {
               "rgba(255, 255, 255, 0)",
             ]}
           />
-          <Text style={[styles.playOffline, styles.offlineTypo]}>Play Offline</Text>
+          <Text style={styles.playOffline}>Play Offline</Text>
         </View>
       </Pressable>
+      </View>
+      
+      <View style={styles.row7}> 
       <Pressable
         style={[styles.button2, styles.buttonLayout]}
         onPress={() => navigation.navigate("TwoPlayer2")}
@@ -230,8 +214,9 @@ const HomePage = () => {
           </Text>
         </View>
       </Pressable>
-      
+      </View>
     </View>
+    
     </ScreenWrapper>
   );
 };
@@ -240,15 +225,74 @@ const styles = StyleSheet.create({
   buttonLayout: {
     height: 59,
     width: 190,
-    left: 95,
     flexDirection: "row",
     alignItems: "center",
-    right: 30,
-    position: "absolute",
   },
   framePosition: {
     opacity: 0.5,
     bottom: "0%",
+  },
+  row1: {
+    flex: 0.1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",  
+    paddingTop: "10%",
+    marginTop: "-34%",
+  },
+  row2: {
+    flex: 0.1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: "5%",
+    marginTop: "-20%", 
+   
+  },
+  row3: {
+    flex: 0.1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center", 
+    paddingTop: "10%",
+    marginTop: "-20%",
+   
+  },
+  row4: {
+    flex: 0.2,
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    paddingTop: "5%",
+    marginTop: "-10%",
+  },
+  row5: {
+    flex: 0.3,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center", 
+    paddingTop: "10%",
+    marginTop: "-50%",
+   
+  },
+  row6: {
+    flex: 0.15,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center", 
+    paddingTop: "10%",
+    marginTop: "-35%",
+   
+  },
+  row7: {
+    flex: 0.15,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center", 
+    paddingTop: "10%",
+    marginTop: "-55%",
+   
   },
   frameInnerLayout: {
     opacity: 0.7,
@@ -258,8 +302,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   frameChild1Position: {
-    left: "5.78%",
-    right: "6.31%",
     width: "87.91%",
     height: "2.27%",
     backgroundColor: "transparent",
@@ -279,16 +321,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     position: "absolute",
   },
-  pxfuel1Icon: {
-    width: 390,
-    left: 0,
-    top: 0,
-    position: "absolute",
-    height: 844,
-  },
+ 
   x10: {
-    top: 118,
-    left: 83,
     fontSize: 64,
     color: Color.white,
     textAlign: "center",
@@ -306,8 +340,6 @@ const styles = StyleSheet.create({
     height: 50,
   },
   settingLineLightWrapper: {
-    top: 56,
-    left: 94,
     flexDirection: "row",
     position: "absolute",
   },
@@ -330,8 +362,6 @@ const styles = StyleSheet.create({
     marginLeft: 34,
   },
   subtractParent: {
-    top: 58,
-    left: 106,
     flex: 0.125,
     justifyContent: 'center', // Center vertically
     alignItems: 'center',
@@ -343,13 +373,10 @@ const styles = StyleSheet.create({
   },
   ticTacToe: {
     fontSize: 48,
-    right: 50,
-    left: 60,
     fontFamily: "Itim-Regular",
     color: Color.goldenrod_200,
     flexDirection: "row",
     alignItems: "center",
-    top: 205,
   },
   ticTacToeContainer1: {
     lineBreak: "anywhere",
@@ -358,8 +385,6 @@ const styles = StyleSheet.create({
   ticTacToeContainer: {
     height: "6.75%",
     width: "75.13%",
-    top: "25%",
-    left: "12.31%",
     textShadowRadius: 2.79,
     textShadowOffset: {
       width: 0,
@@ -383,18 +408,13 @@ const styles = StyleSheet.create({
     },
     shadowColor: "rgba(0, 0, 0, 0.14)",
     backgroundColor: Color.darkkhaki,
-    top: "6.63%",
     height: "93.37%",
     borderRadius: 13,
-    left: "0%",
-    bottom: "0%",
-    right: "0%",
     position: "absolute",
     width: "100%",
   },
   frameChildPosition: {
     backgroundColor: "transparent",
-    top: "0%",
     shadowOpacity: 1,
     elevation: 5.04,
     shadowRadius: 5.04,
@@ -403,28 +423,19 @@ const styles = StyleSheet.create({
       height: 2.518890857696533,
     },
     shadowColor: "rgba(0, 0, 0, 0.14)",
-    left: "0%",
-    bottom: "0%",
-    right: "0%",
     height: "100%",
     position: "absolute",
     width: "100%",
   },
   frameItem: {
     backgroundColor: Color.goldenrod_200,
-    top: "50.67%",
     height: "49.33%",
-    left: "0%",
-    right: "0%",
     opacity: 0.5,
     position: "absolute",
     width: "100%",
   },
   frameInner: {
     width: "93.57%",
-    right: "3.21%",
-    left: "3.21%",
-    top: "50.67%",
     height: "49.33%",
     bottom: "0%",
     opacity: 0.7,
@@ -434,23 +445,16 @@ const styles = StyleSheet.create({
   ellipseIcon: {
     height: "22.73%",
     width: "93.11%",
-    right: "3.42%",
-    bottom: "77.27%",
-    left: "3.47%",
-    top: "0%",
   },
   rectangleLineargradient: {
-    bottom: "97.73%",
-    top: "0%",
+    
   },
   frameChild1: {
-    top: "97.73%",
     opacity: 0.5,
-    bottom: "0%",
   },
-  playOnline: {
+  playOffline: {
     width: "64.33%",
-    top: "26.72%",
+    top: "25.26%",
     left: "17.83%",
     fontSize: 22,
     textShadowRadius: 3.78,
@@ -472,14 +476,11 @@ const styles = StyleSheet.create({
     height: 55,
     borderRadius: 13,
     width: 190,
-    left: 0,
-    top: 0,
     position: "absolute",
     overflow: "hidden",
   },
   button: {
-    top: 390,
-    left: 30,
+    
   },
   twoPlayerOnline: {
     top: "25.26%",
@@ -487,11 +488,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.size_xl,
     justifyContent: "center",
     alignItems: "center",
-    left: "0%",
     display: "flex",
   },
   button1: {
-    top: 400,
+    
   },
   twoPlayerOffline: {
     top: "25.26%",
@@ -499,37 +499,33 @@ const styles = StyleSheet.create({
     fontSize: FontSize.size_xl,
     justifyContent: "center",
     alignItems: "center",
-    left: "0%",
     display: "flex",
   },
   button2: {
-    top: 560,
+    
   },
-  playOffline: {
-    height: "46.92%",
-    width: "95.18%",
-    top: "28.87%",
-    left: "1.58%",
-  },
-  button3: {
-    height: "7.03%",
-    width: "48.76%",
-    top: 480,
-    right: "26.11%",
-    bottom: "23.54%",
-    left: 95,
-    flexDirection: "row",
-    position: "absolute",
-  },
+  // playOffline: {
+  //   height: "46.92%",
+  //   width: "95.18%",
+  //   top: "28.87%",
+  //   left: "1.58%",
+  // },
+  // button3: {
+  //   height: "7.03%",
+  //   width: "48.76%",
+  //   top: 480,
+  //   right: "26.11%",
+  //   bottom: "23.54%",
+  //   left: 95,
+  //   flexDirection: "row",
+  //   position: "absolute",
+  // },
   
   gold: {
     fontSize: 64,
-    right: 50,
-    left: 30,
     color: Color.goldenrod_200,
     flexDirection: "row",
     alignItems: "center",
-    top: 270,
     textShadowOffset: {
       width: 0,
       height: 2.7866785526275635,
@@ -546,11 +542,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
     width: "100%",
-    // backgroundColor: Color.white,
-    // flex: 1,
-    // overflow: "hidden",
-    // height: 844,
-    // width: "100%",
+   
   },
 });
 

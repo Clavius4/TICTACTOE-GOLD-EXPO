@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Gradle Build",
+        "type": "java",
+        "request": "launch",
+        "mainClass": "org.gradle.launcher.daemon.bootstrap.GradleDaemon",
+        "args": [
+          "--no-daemon"
+        ],
+        "projectRoot": "${workspaceFolder}",
+        "classpath": [
+          "${workspaceFolder}/gradle/wrapper/gradle-wrapper.jar"
+        ],
+        "jvmArgs": [
+          "-Dorg.gradle.debug=true"
+        ]
+      }
+    ]
+  }
+  

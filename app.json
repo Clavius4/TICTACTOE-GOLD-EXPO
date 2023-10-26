@@ -1,10 +1,30 @@
 {
   "expo": {
-    "name": "TTTG",
-    "slug": "TTTG",
+    "name": "TIC TAC TOE GOLD",
+    "slug": "TICTACTOEGOLD",
     "version": "1.0.0",
+    "orientation": "portrait",
     "assetBundlePatterns": [
-      "**/*"
-    ]
+      "assets/icon/tic3.ico"
+    ],
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "android": {
+      "package": "com.clavius.TICTACTOEGOLD",
+      "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "com.clavius.TICTACTOEGOLD"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "89b30204-106a-4e74-b382-4cf5fcf1ee44"
+      }
+    },
+
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-2200018159346676~1722882841"
   }
 }

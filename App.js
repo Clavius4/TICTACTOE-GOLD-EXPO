@@ -1,4 +1,3 @@
-const Stack = createNativeStackNavigator();
 import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { ToastProvider, useToast } from 'react-native-toast-message';
@@ -20,21 +19,60 @@ import PlayOffOn from "./screens/PlayOffOn";
 import PlayOffOn2 from "./screens/PlayOffOn2";
 import Ads from "./screens/Ads";
 import MenuDash from "./screens/MenuDash";
+import { ScreenOrientation } from 'expo';
+import * as SQLite from 'expo-sqlite';
 
-import Amplify from "@aws-amplify/core";
-import { Auth } from "aws-amplify";
-import{ withAuthenticator } from "aws-amplify-react-native";
-import config from "./screens/aws-exports";
- 
-
-Amplify.configure(config);
-
+// Open or create a new SQLite database
+const db = SQLite.openDatabase('t4.db');
 
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Slider from '@react-native-community/slider';
 
 import { View, Text, Pressable, TouchableOpacity } from "react-native";
+const Stack = createNativeStackNavigator();
+
+// Function to initialize the database and create tables if they don't exist
+function initializeDatabase() {
+  db.transaction((tx) => {
+      tx.executeSql(
+        'CREATE TABLE IF NOT EXISTS game_stats (' +
+        'id INTEGER PRIMARY KEY AUTOINCREMENT,' +
+        'games_played INTEGER,' +
+        'games_won INTEGER,' +
+        'games_lost INTEGER,' + // Add the new column "games_lost"
+        'games_tied INTEGER,' +
+        'win_percentage REAL,' +
+        'max_win_in_a_row INTEGER,' +
+        'min_victory_time INTEGER,' +
+        'time_played INTEGER)'
+    );
+
+    tx.executeSql(
+      'SELECT * FROM game_stats LIMIT 1',
+      [],
+      (_, { rows }) => {
+        if (rows.length === 0) {
+          // If no data exists, insert the initial data
+          tx.executeSql(
+            'INSERT INTO game_stats (games_played, games_won, games_lost, games_tied, win_percentage, max_win_in_a_row, min_victory_time, time_played) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [0, 0, 0, 0, 0, 0, '0', '0']
+            );
+          }
+        },
+        (_, error) => {
+          console.error('Error checking database:', error);
+        }
+      );
+
+      
+
+      
+  });
+}
+
+// Call the initializeDatabase function when your app starts
+initializeDatabase();
 
 const App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
@@ -168,4 +206,4 @@ const App = () => {
     </>
   );
 };
-export default withAuthenticator(App) ;
+export default App;

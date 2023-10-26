@@ -11,11 +11,11 @@ const HowToPlay = () => {
   return (
     <ScreenWrapper>
           <View style={styles.howtoplay}>
-      <Image
+      {/* <Image
         style={styles.pxfuel1Icon}
         contentFit="cover"
         source={require("../assets/pxfuel-11.png")}
-      />
+      /> */}
       <View style={[styles.frameParent, styles.parentBorder]}>
         <View style={[styles.vectorParent, styles.frameChildPosition]}>
           <Image
@@ -68,7 +68,7 @@ const HowToPlay = () => {
       <Text
         style={[styles.theGameIs, styles.aiClr]}
       >1. The Game is played in turns.
-The Objective is one of the players t attain a row, column or diagonal alignment of similar pieces in line.
+The Objective is one of the players to attain a row, column or diagonal alignment of similar pieces in line.
 Once there is no pieces alignment it will be a draw.</Text>
       <Pressable
         style={styles.group}
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   frameChildPosition: {
-    width: 296,
+    width: 310,
     top: 0,
     position: "absolute",
   },
@@ -192,26 +192,26 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   you: {
-    left: 63,
+    left: "21%",
     fontFamily: FontFamily.inriaSansBold,
     fontWeight: "700",
     fontSize: 12,
-    top: 107,
+    top: "29%",
     color: Color.white,
     textAlign: "center",
   },
   ai: {
-    left: 216,
+    left: "73%",
     fontFamily: FontFamily.inriaSansBold,
     fontWeight: "700",
     fontSize: 12,
-    top: 107,
+    top: "29%",
     color: Color.white,
     textAlign: "center",
   },
   frameIcon: {
-    top: 139,
-    left: 55,
+    top: "35%",
+    left: "18%",
     width: 198,
     height: 222,
     position: "absolute",
@@ -241,13 +241,13 @@ const styles = StyleSheet.create({
     height: "5%",
     color: Color.darkkhaki,
     width: "51.28%",
-    top: 470,
+    top: "65%",
     left: "1%",
     fontSize: FontSize.size_5xl,
     lineHeight: 48,
   },
   theGameIs: {
-    top: 510,
+    top: "70%",
     fontSize: 14,
     lineHeight: 40,
     textAlign: "left",
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     display: "flex",
     fontFamily: FontFamily.itimRegular,
     width: 390,
-    left: 15,
+    left: "5.5%",
   },
   icon: {
     height: "100%",
@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
     top: "8%",
     right: "7.44%",
     bottom: "92.42%",
-    width: "10.26%",
-    height: "5.3%",
+    width: "11.26%",
+    height: "5.5%",
     position: "absolute",
   },
   howtoplay: {

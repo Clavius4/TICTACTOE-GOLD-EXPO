@@ -2,13 +2,31 @@ import * as React from "react";
 import { AsyncStorage } from "react-native";
 import { useState } from "react";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import { StyleSheet, Text, View, Pressable, ImageBackground } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { FontFamily, Color, FontSize } from "../GlobalStyles";
 import ScreenWrapper from "../components/ScreenWrapper";
 
 const Customize = () => {
+  
+  const [map, setMap] = useState([
+
+    //Setting the map array of 10 rows for Initial Game Board
+
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+
+  ]);
+
   const navigation = useNavigation();
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -49,11 +67,11 @@ const Customize = () => {
   return (
     <ScreenWrapper>
     <View style={styles.customize}>
-      <Image
+      {/* <Image
         style={styles.pxfuel1Icon}
         contentFit="cover"
         source={require("../assets/pxfuel-11.png")}
-      />
+      /> */}
       <View style={[styles.frameParent, styles.parentBorder]}>
         <View style={[styles.vectorParent, styles.frameChildPosition]}>
           <Image
@@ -84,9 +102,9 @@ const Customize = () => {
           source={require("../assets/group.png")}
         />
       </Pressable>
-      
+{/*       
       <Pressable
-      //Board and pieces customization
+      Board and pieces customization
         style={[styles.customizeChild, styles.customizePosition]}
         onPress={() => handleImagePress(require("../assets/frame-234261.png"))} // Navigate to the "Settings" screen
       >
@@ -106,11 +124,51 @@ const Customize = () => {
           contentFit="cover"
           source={require("../assets/frame-23427.png")}
         />
-      </Pressable>
+      </Pressable>  */}
+
+
+      <View style={[styles.row3]}>
+  <ImageBackground contentFit="contain">
+    <View style={styles.mapContainer}>
+      {/* First Map */}
+      <View style={styles.map}>
+        {map.map((row, rowIndex) => (
+          <View style={styles.row} key={`row-${rowIndex}`}>
+            {row.map((cell, columnIndex) => (
+              <Pressable
+                style={styles.cell}
+                key={`row-${columnIndex}-col-${rowIndex}`}
+              ></Pressable>
+            ))}
+          </View>
+        ))}
+      </View>
+
+      {/* Space between the maps */}
+      <View style={styles.spaceBetween}></View>
+
+      {/* Second Map*/}
+      <View style={styles.map2}>
+        {map.map((row, rowIndex) => (
+          <View style={styles.row} key={`row-${rowIndex}`}>
+            {row.map((cell, columnIndex) => (
+              <Pressable
+                style={styles.cell2}
+                key={`second-map-row-${columnIndex}-col-${rowIndex}`}
+              ></Pressable>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  </ImageBackground>
+</View>
+
+      
 
       <View style={styles.buttonParent}>
         <Pressable
-          style={[styles.button, styles.buttonPosition1]}
+          style={[styles.button, styles.button1Position]}
           onPress={() => navigation.navigate("HomePage")}
         >
           <View style={[styles.buttonChild, styles.frameInnerShadowBox]} />
@@ -155,11 +213,15 @@ const Customize = () => {
             <Text style={[styles.cancel, styles.saveTypo]}>Cancel</Text>
           </View>
         </Pressable>
-        <View style={[styles.button1, styles.button1Position]}>
-          <View style={[styles.buttonItem, styles.buttonItemShadowBox]} />
-          <View style={[styles.rectangleGroup, styles.rectanglePosition]}>
+        
+        <Pressable
+          style={[styles.button, styles.buttonPosition1]}
+          onPress={() => navigation.navigate("HomePage")}
+        >
+          <View style={[styles.buttonChild, styles.frameInnerShadowBox]} />
+          <View style={[styles.rectangleParent, styles.rectanglePosition]}>
             <LinearGradient
-              style={[styles.frameChild3, styles.buttonItemShadowBox]}
+              style={[styles.frameInner, styles.frameBg]}
               locations={[0, 1]}
               colors={["#fff", "rgba(255, 255, 255, 0)"]}
             />
@@ -167,12 +229,12 @@ const Customize = () => {
             <Image
               style={[styles.ellipseIcon, styles.ellipseIconLayout]}
               contentFit="cover"
-              source={require("../assets/ellipse-281.png")}
+              source={require("../assets/ellipse-28.png")}
             />
             <Image
               style={[styles.frameChild1, styles.ellipseIconLayout]}
               contentFit="cover"
-              source={require("../assets/ellipse-291.png")}
+              source={require("../assets/ellipse-29.png")}
             />
             <LinearGradient
               style={[
@@ -195,10 +257,10 @@ const Customize = () => {
                 "rgba(255, 255, 255, 0)",
               ]}
             />
-            <Text style={[styles.save, styles.saveTypo]}>Save</Text>
+            <Text style={[styles.cancel, styles.saveTypo]}>Save</Text>
           </View>
+        </Pressable>
         </View>
-      </View>
       <Text
         style={[styles.boardsPieces, styles.boardsPiecesFlexBox]}
       >Boards& Pieces</Text>
@@ -213,8 +275,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   frameChildPosition: {
-    width: 296,
-    top: 0,
+    width: 310,
     position: "absolute",
   },
   boardsPiecesFlexBox: {
@@ -229,13 +290,62 @@ const styles = StyleSheet.create({
   },
   customizePosition: { //Boards to be customized
     height: 190,
-    top: 420,
+    top: "55%",
     position: "absolute",
     overflow: "hidden",
   },
+  mapContainer: {
+    flexDirection: 'row',
+    alignItems: 'center', 
+  },
+  spaceBetween: {
+    width: '1%', 
+  },
+  map2: {
+    flex: 1, 
+    borderColor: "yellow",
+    borderWidth: 3,
+    aspectRatio: 0.95, 
+    marginTop: "95.5%",
+    width:"70%",
+     backgroundColor: "green",
+  },
+  cell2: {
+    flex: 1, 
+    borderColor: "yellow",
+    borderWidth: 1.1,
+    
+  },
+  map: {
+    borderColor: "cyan",
+    borderWidth: 3,
+    width:"60%",
+    aspectRatio: 0.95,
+     marginTop: "95.5%",
+     right: "10%",
+     backgroundColor: "grey",
+
+  },
+  cell: {
+    flex: 1,
+    borderColor: "cyan",
+    borderWidth: 1.1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  row3: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  row: {
+    flex: 1,
+    flexDirection: "row",
+  },
+
   buttonPosition1: {//Cancel button
     height: "100%",
-    left: "0%",
+    left: "70%",
     top: "300%",
   },
   frameInnerShadowBox: {
@@ -243,7 +353,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.43,
     right: "0%",
     bottom: "0%",
-    left: "0%",
+    left: "1%",
     shadowOpacity: 1,
     shadowOffset: {
       width: 0,
@@ -251,7 +361,7 @@ const styles = StyleSheet.create({
     },
     shadowColor: "rgba(0, 0, 0, 0.14)",
     position: "absolute",
-    width: "100%",
+    width: "95%",
   },
   rectanglePosition: {
     width: 102,
@@ -358,7 +468,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   preview: {
-    top: 50,
+    top: "16%",
     left: 107,
     fontSize: FontSize.size_5xl,
     lineHeight: 48,
@@ -368,8 +478,8 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   frameItem: {
-    top: 80,
-    left: 52,
+    top: "28%",
+    left: "18%",
     width: 198,
     height: 222,
     position: "absolute",
@@ -408,16 +518,16 @@ const styles = StyleSheet.create({
     top: "4.98%",
     right: "8.72%",
     bottom: "90.28%",
-    width: "10.26%",
-    height: "5.3%",
+    width: "11.26%",
+    height: "5.4%",
     position: "absolute",
   },
   customizeChild: { //Bluish board
-    left: 4,
+    left: "1%",
     width: 195,
   },
   customizeItem: { //Greenish board
-    left: 209,
+    left: "55%",
     width: 178,
   },
   buttonChild: {
@@ -521,7 +631,7 @@ const styles = StyleSheet.create({
   buttonParent: {//Cancel&Save grouped buttons
     height: "4.78%",
     width: "63.08%",
-    top: "69%",
+    top: "70%",
     right: "18.97%",
     bottom: "16.78%",
     left: "17.95%",

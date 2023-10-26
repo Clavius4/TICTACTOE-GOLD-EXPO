@@ -1,11 +1,9 @@
-import * as React from "react";
-import { Image } from "expo-image";
-import { useState } from "react";
-import { StyleSheet, Text, View, Pressable, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { useNavigation } from "@react-navigation/native";
-import { Color, FontFamily } from "../GlobalStyles";
-import ScreenWrapper from "../components/ScreenWrapper";
+import { useNavigation } from '@react-navigation/native';
+import { Color, FontFamily } from '../GlobalStyles';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const Settings = () => {
   const [soundVolume, setSoundVolume] = useState(0.5);
@@ -14,14 +12,70 @@ const Settings = () => {
   const [soundMuted, setSoundMuted] = useState(false);
   const navigation = useNavigation();
 
-  
-  const toggleMusicMute = () => {
-    setMusicMuted(!musicMuted);
+
+ 
+  useEffect(() => {
+    // Check for music mute and update icon accordingly
+    if (musicVolume === 0) {
+      setMusicMuted(true);
+    } else {
+      setMusicMuted(false);
+    }
+  }, [musicVolume]);
+
+  useEffect(() => {
+    // Check for sound mute and update icon accordingly
+    if (soundVolume === 0) {
+      setSoundMuted(true);
+    } else {
+      setSoundMuted(false);
+    }
+  }, [soundVolume]);
+
+  const updateMusicVolume = async (value) => {
+    setMusicVolume(value);
+
+    // Adjust the volume of the soundObject if it exists
+    if (soundObject) {
+      await soundObject.setVolumeAsync(value);
+
+      // Handle music mute/unmute
+      if (value === 0) {
+        setMusicMuted(true);
+        await soundObject.stopAsync();
+      } else {
+        setMusicMuted(false);
+      }
+    }
+  };
+
+  const updateSoundVolume = (value) => {
+    setSoundVolume(value);
+
+    // Adjust the volume of sound effects if you have any
+  };
+
+  const toggleMusicMute = async () => {
+    const newMusicMuted = !musicMuted;
+    setMusicMuted(newMusicMuted);
+
+    // Mute or unmute the soundObject based on newMusicMuted
+    if (soundObject) {
+      if (newMusicMuted) {
+        await soundObject.setVolumeAsync(0);
+      } else {
+        await soundObject.setVolumeAsync(musicVolume);
+      }
+    }
   };
 
   const toggleSoundMute = () => {
-    setSoundMuted(!soundMuted);
+    const newSoundMuted = !soundMuted;
+    setSoundMuted(newSoundMuted);
+
+    // Mute or unmute sound effects if you have any
   };
+
 
   return (
     <ScreenWrapper>
@@ -38,37 +92,46 @@ const Settings = () => {
           </View>
         </View>
         
+        {/* Music Volume Slider */}
         <Slider
-        style={styles.frameItem}
-        value={musicVolume}
-        onValueChange={(value) => setMusicVolume(value)}
-        minimumValue={0}
-        maximumValue={1}
-        step={0.01}
-        thumbTintColor={musicMuted ? 'red' : 'white'} // Customize thumb color based on mute status
-        minimumTrackTintColor={musicMuted ? 'white' : 'green'} // Customize track color based on mute status
-      />
-      <Slider
-        style={styles.frameInner}
-        value={soundVolume}
-        onValueChange={(value) => setSoundVolume(value)}
-        minimumValue={0}
-        maximumValue={1}
-        step={0.01}
-        thumbTintColor={soundMuted ? 'gray' : 'white'} // Customize thumb color based on mute status
-        minimumTrackTintColor={soundMuted ? 'gray' : 'green'} // Customize track color based on mute status
-      />
-      
-        <Image
-          style={[styles.musicIcon, styles.iconGroupLayout]}
-          contentFit="cover"
-          source={require("../assets/music2.png")}
+          style={styles.frameItem}
+          value={soundVolume}
+          onValueChange={updateSoundVolume}
+          minimumValue={0}
+          maximumValue={1}
+          step={0.01}
+          thumbTintColor={soundMuted ? 'red' : 'white'}
+          minimumTrackTintColor={soundMuted ? 'white' : 'green'}
+          maximumTrackTintColor="blue"
         />
-        <Image
-          style={[styles.soundIcon, styles.iconGroupLayout]}
-          contentFit="cover"
-          source={require("../assets/sound.png")}
+
+        {/* Sound Volume Slider */}
+        <Slider
+          style={styles.frameInner}
+          value={musicVolume}
+          onValueChange={updateMusicVolume}
+          minimumValue={0}
+          maximumValue={1}
+          step={0.01}
+          thumbTintColor={musicMuted ? 'red' : 'white'}
+          minimumTrackTintColor={musicMuted ? 'white' : 'green'}
+          maximumTrackTintColor="blue"
         />
+
+        
+<Image
+  style={[styles.musicIcon, styles.iconGroupLayout]}
+  contentFit="cover"
+  source={musicMuted ? require("../assets/music_mute.png") : require("../assets/music2.png")}
+  onPress={toggleMusicMute}
+/>
+<Image
+  style={[styles.soundIcon, styles.iconGroupLayout]}
+  contentFit="cover"
+  source={soundMuted ? require("../assets/sound_mute.png") : require("../assets/sound.png")}
+  onPress={toggleSoundMute}
+/>
+
       </View>
       <Pressable
         style={styles.group}
@@ -133,7 +196,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   frameChildLayout: {
-    width: 285,
+    width: 306,
     position: "absolute",
   },
   frameLayout: {
@@ -186,7 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     display: "flex",
     textAlign: "center",
-    left: "-1%",
+    left: "2%",
     flexDirection: "row",
     right: "100%",
     top: "-5%",
@@ -202,30 +265,29 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   vectorParent: {
-    top: 1,
-    left: 3,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     borderColor: "#000",
-    borderWidth: 0.9,
-    height: 51,
+    borderWidth: 2.9,
+    height: 55,
     borderStyle: "solid",
     overflow: "hidden",
   },
-  frameItem: { //music bar
-    top: 240,
-    left: 80,
-    width: 200,
+  frameItem: { //sound bar
+    top: "40%",
+    width: 190,
+    left: "23%",
   },
-  frameInner: { //sound bar
-    top: 118,
-    left: 80,
-    width: 200,
-
+  frameInner: { //music bar
+    top: "65%",
+    width: 190,
+    left: "23%",
   },
   slider: {
     width: '80%',
     marginVertical: 10,
+    marginLeft: 'auto', 
+  marginRight: 80,
   },
   musicIcon: {
     top: "69%",
@@ -276,8 +338,8 @@ const styles = StyleSheet.create({
     top: "15.76%",
     right: "8.72%",
     bottom: "79.5%",
-    width: "10%",
-    height: "5.1%",
+    width: "11%",
+    height: "5.3%",
     position: "absolute",
   },
   customize1: {
@@ -301,7 +363,7 @@ const styles = StyleSheet.create({
   customizeParent: {
     height: "8%",
     top: 50,
-    width: "20%",
+    width: "21.5%",
     right: "3.33%",
     bottom: "10%",
     left: "76.67%",

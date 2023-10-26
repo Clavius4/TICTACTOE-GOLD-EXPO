@@ -20,7 +20,7 @@ const PlayOffOn = () => {
       source={require("../assets/pxfuel-11.png")}
     >
       <View style={styles.playOnlineWithAFriendParent}>
-        <Text style={styles.playOnlineWith}>Play Online {'\n'} With A Friend</Text>
+        <Text style={styles.playOnlineWith}>Play Online With A Friend</Text>
         <Pressable
           style={[styles.groupChild, styles.groupLayout]}
           onPress={() => navigation.navigate("Code")}
@@ -34,11 +34,11 @@ const PlayOffOn = () => {
         </Text>
         <Text style={[styles.enterCode, styles.enterCodeTypo]}>ENTER CODE</Text>
       </View>
-      <Image
+      {/* <Image
         style={styles.vectorIcon}
         contentFit="cover"
         source={require("../assets/group.png")}
-      />
+      /> */}
     </ImageBackground>
   );
 };

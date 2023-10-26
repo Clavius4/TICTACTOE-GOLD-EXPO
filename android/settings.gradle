@@ -1,4 +1,4 @@
-rootProject.name = 'TTTG'
+rootProject.name = 'TIC TAC TOE GOLD'
 
 apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle");
 useExpoModules()

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ToastProvider, useToast } from 'react-native-toast-message';
 import { Image } from "expo-image";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,14 +7,22 @@ import { StyleSheet, Pressable, Text, View, ImageBackground, Alert, ToastAndroid
 import { useNavigation } from "@react-navigation/native";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { Color, Border, FontFamily, FontSize } from "../GlobalStyles";
+import { Game } from "../screens/models";
+import { Audio } from 'expo-av';
+
+
 
 import Amplify from "@aws-amplify/core";
-import { Auth } from "aws-amplify";
+import { Auth, DataStore  } from "aws-amplify";
 import{ withAuthenticator } from "aws-amplify-react-native";
-import config from "./screens/aws-exports";
- 
-
+import config from "../screens/aws-exports";
 Amplify.configure(config);
+
+
+//copying the board
+const copyBoard = (board) => {``
+  return board.map((row) => [...row]);
+};
 
 
 export default function TwoPlayer(){
@@ -38,6 +46,32 @@ export default function TwoPlayer(){
 
   const [currentTurn, setCurrentTurn] = useState("X");
   const navigation = useNavigation();
+
+  const [soundVolume, setSoundVolume] = useState(0.5);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [musicMuted, setMusicMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
+  const backgroundMusic = require('../assets/audio/game1.mp3');
+  const soundObject = new Audio.Sound();
+  console.log("Sound object is created", soundObject);
+
+  useEffect(() => {
+    const loadMusic = async () => {
+      try {
+        await soundObject.loadAsync(backgroundMusic);
+        await soundObject.playAsync();
+      } catch (error) {
+        console.error('Error loading or playing music:', error);
+      }
+    };
+
+    loadMusic();
+
+    return () => {
+      soundObject.unloadAsync();
+    };
+  }, []);
+  
   
   const showAlert = (title, message, buttons) => {
     Alert.alert(
@@ -56,6 +90,40 @@ export default function TwoPlayer(){
     setDarkGrayGradient(currentPlayer === "X");
   };
   
+
+  useEffect(() => {
+    OnlineGamePlay();
+  }, [currentTurn]);
+
+    //Hooks for calling up states and props
+    useEffect(() => {
+      // Timeout for the AI's turn
+      setTimeout(() => {
+        if (currentTurn === "O") {
+          OnlineGamePlay();
+          // botTurn();
+        }
+      }, 2000); // (2 seconds) timeout
+    }, [currentTurn]);
+
+    const OnlineGamePlay = async () => {
+      console.warn("Online");
+      await createNewGame();
+    };
+
+    const createNewGame = async () => {
+
+      const userData = await Auth.currentAuthenticatedUser();
+      console.log("userData");
+      const emptyString = JSON.stringify(copyBoard);
+
+      const newGame = new Game({
+        playerX: userData.attributes.sub,
+        map: emptyString,
+        currentPlayer: 'X',
+      })
+      await DataStore.save(newGame);
+    };
 
   const checkWinningState = () => {
 

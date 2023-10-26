@@ -1,12 +1,26 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View, Pressable, Linking } from "react-native";
+import { StyleSheet, Text, View, Pressable, Linking, TextInput, TouchableOpacity  } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { FontFamily, Color, FontSize } from "../GlobalStyles";
 import ScreenWrapper from "../components/ScreenWrapper";
 
 const Favorites = () => {
   const navigation = useNavigation();
+
+  const [email, setEmail] = useState("");
+
+  const handleSendEmail = () => {
+    // Implement your logic to send the email here using the 'email' state.
+    if (email) {
+      // Do something with the 'email' variable (e.g., send an email).
+      console.log(`Sending email to: ${email}`);
+    } else {
+      // Handle the case when no email is entered.
+      console.warn("Please enter an email address.");
+    }
+  };
+
 
   return (
     <ScreenWrapper>
@@ -29,14 +43,18 @@ const Favorites = () => {
         >Want to be the first to hear about our new game releases?
 
 Join our Newsletter</Text>
-        <View style={styles.rectangleParent}>
-          <View style={styles.groupChild} />
-          <Text style={[styles.emailAddress, styles.sendTypo]}>
-            email address
-          </Text>
-          <View style={[styles.groupItem, styles.groupItemShadowBox]} />
-          <Text style={[styles.send, styles.sendTypo]}>SEND</Text>
-        </View>
+<View style={styles.rectangleParent}>
+      <View style={styles.groupChild} />
+      <TextInput
+        style={styles.emailInput}
+        placeholder="email address"
+        value={email}
+        onChangeText={(text) => setEmail(text)}
+      />
+      <TouchableOpacity style={styles.sendButton} onPress={handleSendEmail}>
+        <Text style={styles.send}>SEND</Text>
+      </TouchableOpacity>
+    </View>
         <Text style={[styles.ravensStudio, styles.sendTypo]}>
           RAVENS STUDIO
         </Text>
@@ -83,6 +101,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.inriaSansRegular,
     color: Color.white,
   },
+  
   groupItemShadowBox: {
     borderStyle: "solid",
     shadowOpacity: 1,
@@ -114,6 +133,27 @@ const styles = StyleSheet.create({
     fontSize: FontSize.size_5xl,
     position: "absolute",
   },
+  sendButton: {
+    // Styles for the send button
+    backgroundColor: "blue",
+    borderRadius: 5,
+    padding: "3%",
+    left: "108%",
+    width: 80,
+    bottom: "105%",
+    
+  },
+  emailInput: {
+    // Styles for the email input field
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 5,
+    paddingHorizontal: 45,
+    paddingVertical: 5,
+    fontSize: 12,
+    marginBottom: 10,
+    backgroundColor: "white",
+  },
   frameChild: {
     left: 21,
     width: 231,
@@ -137,17 +177,17 @@ const styles = StyleSheet.create({
     color: Color.white,
     fontWeight: "700",
   },
-  groupChild: {
-    height: "85.1%",
-    width: "68.93%",
-    top: "3.4%",
-    right: "31.07%",
-    bottom: "11.5%",
-    left: "0%",
-    borderRadius: 2,
-    backgroundColor: Color.gainsboro,
-    position: "absolute",
-  },
+  // groupChild: {
+  //   height: "85.1%",
+  //   width: "38.93%",
+  //   top: "120%",
+  //   right: "31.07%",
+  //   bottom: "11.5%",
+  //   left: "0%",
+  //   borderRadius: 2,
+  //   backgroundColor: Color.gainsboro,
+  //   position: "absolute",
+  // },
   emailAddress: {
     height: "32.2%",
     width: "29.12%",
@@ -173,16 +213,16 @@ const styles = StyleSheet.create({
   },
   send: {
     height: "75.9%",
-    width: "19.17%",
-    top: "24.1%",
-    left: "80.35%",
-    fontSize: 13,
+    width: "59.17%",
+    top: "8.1%",
+    left: "23.35%",
+    fontSize: 14,
     color: Color.white,
     fontWeight: "700",
   },
   rectangleParent: {
     height: "7.01%",
-    width: "91.66%",
+    width: "61.66%",
     top: "37.18%",
     right: "4.97%",
     bottom: "55.81%",
@@ -242,7 +282,7 @@ const styles = StyleSheet.create({
     top: "9%",
     right: "8.21%",
     bottom: "86.26%",
-    width: "10.26%",
+    width: "11.26%",
     height: "5.3%",
     position: "absolute",
   },

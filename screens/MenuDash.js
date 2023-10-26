@@ -95,11 +95,11 @@ const MenuDash = () => {
             source={require("../assets/vector1.png")}
           />
         </Pressable>
-        <Image
+        {/* <Image
           style={[styles.vectorIcon2, styles.layer2IconLayout]}
           contentFit="cover"
           source={require("../assets/vector2.png")}
-        />
+        /> */}
       </View>
     </ImageBackground>
   );

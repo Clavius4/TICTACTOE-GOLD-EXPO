@@ -1,26 +1,22 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Audio } from 'expo-av';
 import { ToastProvider, useToast } from 'react-native-toast-message';
 import { Image } from "expo-image";
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Pressable, Text, View, ImageBackground, Alert, ToastAndroid } from "react-native";
+import { Modal, StyleSheet, Pressable, Text, View, ImageBackground, Alert, ToastAndroid } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { Color, Border, FontFamily, FontSize } from "../GlobalStyles";
+import GameAlert from "./GameAlert";
+import { checkWin, isTie, makeEasyMove, makeMediumMove, makeHardMove } from '../screens/Result';
+import * as SQLite from 'expo-sqlite';
 
-
-import Amplify from "@aws-amplify/core";
-import { Auth } from "aws-amplify";
-import{ withAuthenticator } from "aws-amplify-react-native";
-import config from "./screens/aws-exports";
- 
-
-Amplify.configure(config);
-
+const db = SQLite.openDatabase("t4.db");
 
 
 //copying the board
-const copyBoard = (board) => {``
+const copyBoard = (board) => {
   return board.map((row) => [...row]);
 };
 
@@ -47,387 +43,258 @@ export default function OnePlayer2() {
 
   const [currentTurn, setCurrentTurn] = useState("X");
   const navigation = useNavigation();
-  const [selectedLevel, setSelectedLevel] = useState(null);
-  const [isLevelModalVisible, setIsLevelModalVisible] = useState(false);
+  const [gameMode, setGameMode] = useState("BOT_MEDIUM");
+  const [soundVolume, setSoundVolume] = useState(0.5);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [musicMuted, setMusicMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
+  const [gamesPlayed, setGamesPlayed] = useState(0);
+  const [gamesWon, setGamesWon] = useState(0);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [gamesLost, setGamesLost] = useState(0);
+  const [gamesTied, setGamesTied] = useState(0);
+  const [maxWinInARow, setMaxWinInARow] = useState(0);
+  const [minVictoryTime, setMinVictoryTime] = useState("N/A");
+  const [timePlayed, setTimePlayed] = useState(0);
+  const [totalTimePlayed, setTotalTimePlayed] = useState(0);
+  const [currentWinStreak, setCurrentWinStreak] = useState(0);
+  const [gameStart, setGameStart] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [gameStarted, setGameStarted] = useState(false); // New state to track whether the game has started
+  const [gameOver, setGameOver] = useState(false);
 
-  // Function to handle the level selection
-  const handleLevelSelection = (level) => {
-    setSelectedLevel(level);
-    setIsLevelModalVisible(false);
+  const backgroundMusic = require('../assets/audio/game1.mp3');
+  const soundObject = useRef(new Audio.Sound()).current;
 
-    // Start the game once the level is selected
-    startGame();
+  const loadAndPlayMusic = async () => {
+        try {
+      await soundObject.loadAsync(backgroundMusic);
+      await soundObject.playAsync();
+    } catch (error) {
+      console.error('Error loading or playing music:', error);
+    }
   };
 
-  const showAlert = (title, message, buttons) => {
+  useEffect(() => {
+  if (currentTurn === 'O') {
+    // AI's turn
+
+    // Determine which AI function to use based on the game level
+    let aiMove;
+    if (gameMode === 'BOT_EASY') {
+      aiMove = makeEasyMove(map, 'O');
+    } else if (gameMode === 'BOT_MEDIUM') {
+      aiMove = makeMediumMove(map, 'O');
+    } else if (gameMode === 'BOT_HARD') {
+      aiMove = makeHardMove(map, 'O');
+    }
+
+    if (aiMove) {
+      const [row, col] = aiMove;
+      const updatedMap = [...map];
+      updatedMap[row][col] = 'O';
+      setMap(updatedMap);
+
+      if (checkWin(updatedMap, 'O')) {
+        setGameOver(true);
+        showAlert('AI wins!', 'Restart', 'Exit', resetGame, exitGame);
+      } else if (isTie(updatedMap)) {
+        setGameOver(true);
+        showAlert('It\'s a tie!', 'Restart', 'Exit', resetGame, exitGame);
+      }
+      setCurrentTurn('X');
+    }
+  }
+}, [map, currentTurn, gameMode]);
+
+
+  useEffect(() => {
+    if (currentTurn === 'X') {
+      // Increment gamesPlayed when it's X's turn (user's turn)
+      setGamesPlayed(prevGamesPlayed => prevGamesPlayed + 1);
+    }
+  }, [currentTurn]);
+
+  const onPress = (rowIndex, columnIndex) => {
+    if (!gameOver && map[rowIndex][columnIndex] === "") {
+      const updatedMap = [...map];
+      updatedMap[rowIndex][columnIndex] = currentTurn;
+      setMap(updatedMap);
+
+      if (checkWin(updatedMap, currentTurn)) {
+        setGameOver(true);
+        showAlert('You win!', 'Restart', 'Exit', resetGame, exitGame);
+      } else if (isTie(updatedMap)) {
+        setGameOver(true);
+        showAlert('It\'s a tie!', 'Restart', 'Exit', resetGame, exitGame);
+      }
+
+      setCurrentTurn('O');
+    }
+  };
+
+  const showAlert = (title, button1Text, button2Text, button1Action, button2Action) => {
     Alert.alert(
       title,
-      message,
-      buttons,
+      null,
+      [
+        { text: button1Text, onPress: button1Action },
+        { text: button2Text, onPress: button2Action },
+      ],
       { cancelable: false }
     );
   };
 
-
-   // Function to start the game
-   const startGame = () => {
+  const resetGame = () => {
+    // Implement your logic to reset the game (reset the board, etc.).
     setMap(Array.from({ length: 10 }, () => Array(10).fill("")));
     setCurrentTurn("X");
+    setGameOver(false);
+  
+    // Initialize the increments
+    let gamesPlayedIncrement = 1;
+    let gamesWonIncrement = 0;
+    let gamesLostIncrement = 0;
+    let gamesTiedIncrement = 0;
+  
+    // Check if the current player is 'X' (human player)
+    if (currentTurn === 'X') {
+      gamesWonIncrement = 1;
+    } else if (currentTurn === 'O') {
+      gamesLostIncrement = 1;
+    } else {
+      gamesTiedIncrement = 1;
+    }
+  
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE game_stats SET games_played = games_played + ?, games_won = games_won + ?, games_lost = games_lost + ?, games_tied = games_tied + ? WHERE id = 1',
+        [
+          gamesPlayedIncrement,
+          gamesWonIncrement,
+          gamesLostIncrement,
+          gamesTiedIncrement,
+        ],
+        (tx, results) => {
+          if (results.rowsAffected > 0) {
+            // Statistics updated successfully
+            // Now, calculate the win percentage
+            tx.executeSql(
+              'SELECT games_played, games_won FROM game_stats WHERE id = 1',
+              [],
+              (_, { rows }) => {
+                const { games_played, games_won } = rows.item(0);
+                const winPercentage = (games_won / games_played) * 100;
+  
+                // Round the winPercentage to the nearest whole number
+                const roundedWinPercentage = Math.round(winPercentage);
+  
+                // Update the win_percentage value in the database
+                tx.executeSql(
+                  'UPDATE game_stats SET win_percentage = ? WHERE id = 1',
+                  [roundedWinPercentage],
+                  (_, updateResults) => {
+                    if (updateResults.rowsAffected > 0) {
+                      // Win percentage updated successfully
+                    }
+                  },
+                  (_, error) => {
+                    console.error('Error updating win percentage:', error);
+                  }
+                );
+  
+                // Now, you can use the roundedWinPercentage value as needed
+                console.log('Win Percentage:', roundedWinPercentage);
+              },
+              (_, error) => {
+                console.error('Error calculating win percentage:', error);
+              }
+            );
+          }
+        },
+        (tx, error) => {
+          console.error('Error updating game statistics:', error);
+        }
+      );
+    });
   };
   
-
-  //Hooks for calling up states and props
-  useEffect(() => {
-    // Timeout for the AI's turn
-    setTimeout(() => {
-      if (currentTurn === "O") {
-        botTurn();
-      }
-    }, 2000); // (2 seconds) timeout
-  }, [currentTurn]);
-
-  useEffect(() => {
-    const winner = checkWinningState(map);
-    if (winner) {
-      // Displaying the winning message and handling the game result
-      handleGameResult(winner);
-    } else {
-      // Checking for a draw
-      const isDraw = checkDraw(map);
-      if (isDraw) {
-        showAlert("It's a DRAW!", "Do you want to restart the game?", [
-          {
-            text: "Restart",
-            onPress: resetGame,
-            style: "default",
-          },
-          {
-            text: "Exit",
-            onPress: exitGame,
-            style: "cancel",
-          },
-        ]);
-      }
-    }
-  }, [map]);
-
-  //Pressing function and toast message for alert.
-  const onPress = (rowIndex, columnIndex) => {
-    if (map[rowIndex][columnIndex] !== "") {
-      ToastAndroid.showWithGravityAndOffset(
-        'Position Occupied..!',
-        ToastAndroid.SHORT,
-        ToastAndroid.CENTER,
-        0,
-        0,
-      );
-      return;
-    }
-
-    setMap((existingMap) => {
-      const updatedMap = [...existingMap];
-      updatedMap[rowIndex][columnIndex] = currentTurn;
-      return updatedMap;
-    });
-
-    setCurrentTurn(currentTurn === "X" ? "O" : "X");
-  };
- 
-  //Checking the Winning State during the gameplay
-
- const checkWinningState = (board) => {
-  // Checking each row for a winner.
-  for (let row = 0; row < 10; row++) {
-    for (let column = 0; column <= 6; column++) {
-      const symbol = board[row][column];
-      if (symbol === "") {
-        continue;
-      }
-
-      let isWinningSequence = true;
-      for (let i = 1; i < 5; i++) {
-        if (board[row][column + i] !== symbol) {
-          isWinningSequence = false;
-          break;
-        }
-      }
-
-      if (isWinningSequence) {
-        return symbol; // Returning the winning player symbol
-      }
-    }
-  }
-
-  // Checking each column for a winner.
-  for (let column = 0; column < 10; column++) {
-    for (let row = 0; row <= 6; row++) {
-      const symbol = board[row][column];
-      if (symbol === "") {
-        continue;
-      }
-
-      let isWinningSequence = true;
-      for (let i = 1; i < 5; i++) {
-        if (board[row + i][column] !== symbol) {
-          isWinningSequence = false;
-          break;
-        }
-      }
-
-      if (isWinningSequence) {
-        return symbol; // Returning the winning player symbol
-      }
-    }
-  }
-
-  // Checking the main diagonal (top-left to bottom-right) for a winner.
-  for (let row = 0; row <= 6; row++) {
-    for (let column = 0; column <= 6; column++) {
-      const symbol = board[row][column];
-      if (symbol === "") {
-        continue;
-      }
-
-      let isWinningSequence = true;
-      for (let i = 1; i < 5; i++) {
-        if (board[row + i][column + i] !== symbol) {
-          isWinningSequence = false;
-          break;
-        }
-      }
-
-      if (isWinningSequence) {
-        return symbol; // Returning the winning player symbol
-      }
-    }
-  }
-
-  // Checking the secondary diagonal (top-right to bottom-left) for a winner.
-  for (let row = 0; row <= 6; row++) {
-    for (let column = 9; column >= 4; column--) {
-      const symbol = board[row][column];
-      if (symbol === "") {
-        continue;
-      }
-
-      let isWinningSequence = true;
-      for (let i = 1; i < 5; i++) {
-        if (board[row + i][column - i] !== symbol) {
-          isWinningSequence = false;
-          break;
-        }
-      }
-
-      if (isWinningSequence) {
-        return symbol; // Returning the winning player symbol
-      }
-    }
-  }
-
-  // If no winner found, return null
-  return null;
-};
-
-
-  const checkDraw = (board) => {
-    // Checking if the board is full, indicating a draw
-    return board.every((row) => row.every((cell) => cell !== ""));
-  };
-
-  //Handling alert messaging once the game is over for checking the winner
-
-  const handleGameResult = (winner) => {
-    showAlert(`Player ${winner} wins!`, "Do you want to restart the game?", [
-      {
-        text: "Restart",
-        onPress: resetGame,
-        style: "default",
-      },
-      {
-        text: "Exit",
-        onPress: exitGame,
-        style: "cancel",
-      },
-    ]);
-  };
-
-   //Clearing up the board to be empty for the game Restart
-  const resetGame = () => {
-    setMap(Array.from({ length: 10 }, () => Array(10).fill("")));
-    setCurrentTurn("X");
-  };
 
   const exitGame = () => {
-    navigation.navigate("HomePage");
-  };
+    // Use navigation to navigate to the home page.
+    navigation.navigate("HomePage"); 
 
-  //AI moves and gameplay tracking
-
-  const botTurn = () => {
-
-    // Collecting all possible options
-    const possiblePositions = [];
-    map.forEach((row, rowIndex) => {
-      row.forEach((cell, columnIndex) => {
-        if (cell === "") {
-          possiblePositions.push({ row: rowIndex, col: columnIndex });
+  
+    // Initialize the increments
+    let gamesPlayedIncrement = 1;
+    let gamesWonIncrement = 0;
+    let gamesLostIncrement = 0;
+    let gamesTiedIncrement = 0;
+  
+    // Check if the current player is 'X' (human player)
+    if (currentTurn === 'X') {
+      gamesWonIncrement = 1;
+    } else if (currentTurn === 'O') {
+      gamesLostIncrement = 1;
+    } else {
+      gamesTiedIncrement = 1;
+    }
+  
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE game_stats SET games_played = games_played + ?, games_won = games_won + ?, games_lost = games_lost + ?, games_tied = games_tied + ? WHERE id = 1',
+        [
+          gamesPlayedIncrement,
+          gamesWonIncrement,
+          gamesLostIncrement,
+          gamesTiedIncrement,
+        ],
+        (tx, results) => {
+          if (results.rowsAffected > 0) {
+            // Statistics updated successfully
+            // Now, calculate the win percentage
+            tx.executeSql(
+              'SELECT games_played, games_won FROM game_stats WHERE id = 1',
+              [],
+              (_, { rows }) => {
+                const { games_played, games_won } = rows.item(0);
+                const winPercentage = (games_won / games_played) * 100;
+  
+                // Round the winPercentage to the nearest whole number
+                const roundedWinPercentage = Math.round(winPercentage);
+  
+                // Update the win_percentage value in the database
+                tx.executeSql(
+                  'UPDATE game_stats SET win_percentage = ? WHERE id = 1',
+                  [roundedWinPercentage],
+                  (_, updateResults) => {
+                    if (updateResults.rowsAffected > 0) {
+                      // Win percentage updated successfully
+                    }
+                  },
+                  (_, error) => {
+                    console.error('Error updating win percentage:', error);
+                  }
+                );
+  
+                // Now, you can use the roundedWinPercentage value as needed
+                console.log('Win Percentage:', roundedWinPercentage);
+              },
+              (_, error) => {
+                console.error('Error calculating win percentage:', error);
+              }
+            );
+          }
+        },
+        (tx, error) => {
+          console.error('Error updating game statistics:', error);
         }
-      });
+      );
     });
-    
-    let chosenOption;
-  
-    // First, check for a winning move (offensive)
-    possiblePositions.forEach((possiblePosition) => {
-      const mapCopy = copyBoard(map);
-  
-      // Simulating an attack by the bot
-      mapCopy[possiblePosition.row][possiblePosition.col] = "O";
-  
-      // Check if this move creates an opportunity to win in the next turn
-      if (checkWinningOpportunity(mapCopy, possiblePosition)) {
-        chosenOption = possiblePosition;
-        return; // Exit the loop early
-      }
-    });
-  
-    // If no winning move found, check for a move to block the human player's win (defensive)
-    if (!chosenOption) {
-      possiblePositions.forEach((possiblePosition) => {
-        const mapCopy = copyBoard(map);
-  
-        // Simulating an attack by the opponent
-        mapCopy[possiblePosition.row][possiblePosition.col] = "X";
-  
-        if (checkWinningState(mapCopy) === "X") {
-          // Block the opponent's winning move
-          chosenOption = possiblePosition;
-          return; // Exit the loop early
-        }
-      });
-    }
-  
-    // If neither an offensive nor a defensive move is found, check for blocking three Xs in a row
-    if (!chosenOption) {
-      possiblePositions.forEach((possiblePosition) => {
-        const mapCopy = copyBoard(map);
-  
-        // Simulating an attack by the opponent
-        mapCopy[possiblePosition.row][possiblePosition.col] = "X";
-  
-        // Check if this move blocks three Xs in a row
-        if (checkThreeInARow(mapCopy, possiblePosition, "X")) {
-          chosenOption = possiblePosition;
-          return; // Exit the loop early
-        }
-      });
-    }
-  
-    // If neither an offensive, defensive, nor a blocking move is found, choose a random move
-    if (!chosenOption) {
-      chosenOption =
-        possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
-    }
-  
-    if (chosenOption) {
-      onPress(chosenOption.row, chosenOption.col);
-    }
+
   };
-
-  // Helper function to check if there are three Xs in a row
-
-  const checkWinningOpportunity = (map, position) => {
-    const row = position.row;
-    const col = position.col;
-  
-    // Simulating an attack by the bot
-    map[row][col] = "O";
-  
-    // Checking if this move results in a win for the bot
-    if (checkWinningState(map) === "O") {
-      return true; // It creates an opportunity for the bot to win
-    }
-  
-    return false; // It doesn't create a winning opportunity
-  };
-
-  
-const checkThreeInARow = (map, position, symbol) => {
-  const row = position.row;
-  const col = position.col;
-  const rowCount = map.length;
-  const colCount = map[0].length;
-
-  // Checking horizontally
-  let count = 0;
-  for (let i = 0; i < colCount; i++) {
-    if (map[row][i] === symbol) {
-      count++;
-      if (count === 3) {
-        return true;
-      }
-    } else {
-      count = 0;
-    }
-  }
-
-  // Checking vertically
-  count = 0;
-  for (let i = 0; i < rowCount; i++) {
-    if (map[i][col] === symbol) {
-      count++;
-      if (count === 3) {
-        return true;
-      }
-    } else {
-      count = 0;
-    }
-  }
-
-  // Checking diagonally (both directions)
-  count = 0;
-  for (let i = -2; i <= 2; i++) {
-    if (
-      row + i >= 0 &&
-      row + i < rowCount &&
-      col + i >= 0 &&
-      col + i < colCount &&
-      map[row + i][col + i] === symbol
-    ) {
-      count++;
-      if (count === 3) {
-        return true;
-      }
-    } else {
-      count = 0;
-    }
-  }
-
-  count = 0;
-  for (let i = -2; i <= 2; i++) {
-    if (
-      row + i >= 0 &&
-      row + i < rowCount &&
-      col - i >= 0 &&
-      col - i < colCount &&
-      map[row + i][col - i] === symbol
-    ) {
-      count++;
-      if (count === 3) {
-        return true;
-      }
-    } else {
-      count = 0;
-    }
-  }
-
-  return false;
-};
-
-  
-  
-
-    
+ 
  // UI of the game in JSX
 
   return (
@@ -455,14 +322,13 @@ const checkThreeInARow = (map, position, symbol) => {
         />
         </View>
         <View style={styles.columnContent}>
-        {/* <Text style={[styles.you]}>You</Text> */}
         </View>
       </View>
       <View style={[styles.column, styles.centeredColumn]}> 
       <Image
         style={[styles.vsIcon, styles.iconLayout]}
         contentFit="contain"
-        source={currentTurn==="X"?
+        source={currentTurn==="X"? 
           require("../assets/vs1.png"): require("../assets/vs2.png")}
       />
       </View>
@@ -475,19 +341,18 @@ const checkThreeInARow = (map, position, symbol) => {
         />
         </View>
         <View style={styles.columnContent}>
-        {/* <Text style={[styles.you]}>Player</Text> */}
         </View>
       </View>
-        
       </View>
+      {/* <View style={styles.text}>
+      <Text style={styles.text}>Elapsed Time: {formatElapsedTime(elapsedTime)} seconds</Text>
+    </View> */}
       <View style={[styles.row3]}> 
        <ImageBackground
-       contentFit="contain"
-      
-      >
+       contentFit="contain">
         <View style={styles.map}>
           {map.map((row, rowIndex)=>
-          (<View style={styles.row}>
+          (<View style={styles.row} key={`row-${rowIndex}`}>
              {row.map((cell, columnIndex)=> 
              <Pressable onPress={()=> onPress(rowIndex, columnIndex)} 
              style={styles.cell} 
@@ -508,33 +373,46 @@ const checkThreeInARow = (map, position, symbol) => {
           ))}
 
         </View>
+
+        <View style={styles.buttons}>
+          <Text
+            onPress={() => setGameMode("BOT_EASY")}
+            style={[
+              styles.button,
+              { backgroundColor: gameMode === "BOT_EASY" ? "#4F5686" : "#EC7211" },
+            ]}
+          >
+            EASY
+          </Text>
+          <Text
+            onPress={() => setGameMode("BOT_MEDIUM")}
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  gameMode === "BOT_MEDIUM" ? "#4F5686" : "#EC7211",
+              },
+            ]}
+          >
+            MEDIUM
+          </Text>
+          <Text
+            onPress={() => setGameMode("BOT_HARD")}
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  gameMode === "BOT_HARD" ? "#4F5686" : "#EC7211",
+              },
+            ]}
+          >
+            HARD
+          </Text>
+        </View>
+        
       </ImageBackground>
       </View>
-      {/* <View style={styles.row4}>
-        {currentTurn === 'X' ? (
 
-<LinearGradient
-style={styles.yourTurn}
-locations={[0.47, 0.47, 1]}
-colors={['#fff', '#444444', '#444444']} // Replace green with #444444
-start={{ x: 1, y: 0 }} 
-end={{ x: 0, y: 0 }}   
-/>
-) : (
-<LinearGradient
-style={styles.yourTurn}
-locations={[0.47, 0.47, 1]}
-colors={['#fff', '#444444', '#444444']} 
-start={{ x: 1, y: 0 }} 
-end={{ x: 0, y: 0 }}   
-/>
-)}
-
-
-
-       <Text style={[styles.playersTurn, styles.youFlexBox]}>
-        {currentTurn === "X" ? "Player 2 Turn" : "Player 1 Turn"}</Text>
-      </View> */}
     </View>
     </ScreenWrapper>
   );
@@ -562,6 +440,14 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     position: "absolute",
+  },
+  text: {
+    color: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 16,
+    
+    
   },
   vsIcon: {
     height: "105%",
@@ -675,16 +561,14 @@ const styles = StyleSheet.create({
   row1: {
     flex: 0.1,
     flexDirection: "row",
-    justifyContent: "flex-end", // Aligning items to the right
-    alignItems: "flex-start", // Aligning items to the top
-    paddingRight: 10, // Adjusting the right padding for spacing
-    paddingTop: 28, // Adjusting the top padding for spacing
+    justifyContent: "flex-end",
+    alignItems: "flex-start", 
+    paddingRight: 10, 
+    paddingTop: 28, 
   },
   row: {
     flex: 1,
     flexDirection: "row",
-    // justifyContent: "center",
-    // alignItems: "center",
   },
   firstTwoColumns: {
     flex: 1,
@@ -708,6 +592,25 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
   },
+
+  buttons: {
+    position: "absolute",
+    bottom: 50,
+    flexDirection: "row",
+    borderRadius: 70,
+    paddingHorizontal: "13%",
+    bottom: -70,
+  },
+  button: {
+    color: "white",
+    margin: 10,
+    fontSize: 16,
+    backgroundColor: "#191F24",
+    padding: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+  },
+
   cell: {
     flex: 1,
     borderColor: "gold",
@@ -725,4 +628,3 @@ const styles = StyleSheet.create({
     height:'20%',
   }
 });
-

@@ -23,8 +23,8 @@ const Ads = () => {
       <Text style={[styles.months499, styles.month099Typo]}>
         12 Months $4.99
       </Text>
-      <Text style={styles.yourSubscriptionWill}>{`Your subscription
-will be.......`}</Text>
+      <Text style={styles.yourSubscriptionWill}>Your subscription
+will be.......</Text>
       <View style={[styles.button, styles.buttonLayout1]}>
         <View style={[styles.buttonChild, styles.childShadowBox]} />
         <View style={[styles.rectangleParent, styles.rectanglePosition]}>
@@ -105,11 +105,7 @@ will be.......`}</Text>
           <Text style={[styles.save, styles.saveTypo]}>Save</Text>
         </View>
       </View>
-      <Image
-        style={styles.vectorIcon}
-        contentFit="cover"
-        source={require("../assets/group.png")}
-      />
+
     </ImageBackground>
   );
 };
@@ -274,7 +270,7 @@ const styles = StyleSheet.create({
     color: Color.white,
     fontFamily: FontFamily.inriaSansBold,
     fontWeight: "700",
-    left: 102,
+    left: "11%",
     position: "absolute",
   },
   buttonChild: {

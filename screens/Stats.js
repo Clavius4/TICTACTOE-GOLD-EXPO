@@ -1,12 +1,61 @@
 import * as React from "react";
+import { useState, useEffect } from 'react';
 import { Image } from "expo-image";
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { FontFamily, FontSize, Color } from "../GlobalStyles";
 import ScreenWrapper from "../components/ScreenWrapper";
+import * as SQLite from 'expo-sqlite';
 
-const Stats = () => {
+const db = SQLite.openDatabase("t4.db");
+
+const Stats = (props) => {
   const navigation = useNavigation();
+
+  // Define state variables to store the retrieved data
+  const [gamesPlayed, setGamesPlayed] = useState(0);
+  const [gamesWon, setGamesWon] = useState(0);
+  const [gamesLost, setGamesLost] = useState(0);
+  const [gamesTied, setGamesTied] = useState(0);
+  const [winPercentage, setWinPercentage] = useState("");
+  const [maxWinInARow, setMaxWinInARow] = useState(0);
+  const [minVictoryTime, setMinVictoryTime] = useState("");
+  const [timePlayed, setTimePlayed] = useState("");
+
+
+  // Function to fetch data from the database
+  const fetchGameData = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM game_stats WHERE id = 1',
+        [],
+        (tx, results) => {
+          if (results.rows.length > 0) {
+            const row = results.rows.item(0);
+            // Update the state variables with retrieved data
+            setGamesPlayed(row.games_played);
+            setGamesWon(row.games_won);
+            setGamesLost(row.games_lost);
+            setGamesTied(row.games_tied);
+            setWinPercentage(row.win_percentage);
+            setMaxWinInARow(row.max_win_in_a_row);
+            setMinVictoryTime(row.min_victory_time);
+            setTimePlayed(row.time_played);
+          }
+        },
+        (tx, error) => {
+          console.error('Error fetching game data from the database:', error);
+        }
+      );
+    });
+  };
+
+  useEffect(() => {
+    // Fetch data from the database when the component mounts
+    fetchGameData();
+  }, []);
+  
+
 
   return (
     <ScreenWrapper>
@@ -44,16 +93,16 @@ const Stats = () => {
           contentFit="cover"
           source={require("../assets/music1.png")}
         />
-       <Text style={styles.gamesPlayed20}>
-    Games Played                         20{'\n'}
-    Games Won                             10{'\n'}
-    Games Tied                             4{'\n'}
-    Win Percentage                      50%{'\n'}
-    Max win in a row                    3{'\n'}
-    Min victory time                    1 min{'\n'}
-    Time Played                           2 hrs
-</Text>
-
+   <Text style={styles.gamesPlayed20}>
+          Games Played:                      {gamesPlayed}{'\n'}
+          Games Won:                          {gamesWon}{'\n'}
+          Games Lost:                          {gamesLost}{'\n'}
+          Games Tied:                          {gamesTied}{'\n'}
+          Win Percentage:                   {winPercentage}%{'\n'}
+          Max win in a row:                  {maxWinInARow}{'\n'}
+          Min victory time:                   {minVictoryTime}{'\n'}
+          Time Played:                          {timePlayed}
+        </Text>
 
       </View>
       <Pressable
@@ -82,7 +131,7 @@ const styles = StyleSheet.create({
   },
   frameChildLayout: {
     height: 60,
-    width: 334,
+    width: 355,
     position: "absolute",
   },
   frameInnerLayout: {
@@ -111,7 +160,6 @@ const styles = StyleSheet.create({
   ravensStudio1: {
     top: "-10%",
     fontWeight: "500",
-    left: "-7%",
     fontSize: 31,
     lineHeight: 62,
     fontFamily: FontFamily.itimRegular,
@@ -159,8 +207,8 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   gamesPlayed20: {
-    top: "27.52%",
-    lineHeight: 33,
+    top: "21%",
+    lineHeight: 37,
     left: "3%",
     fontSize: 20,
     fontWeight: "700",
@@ -198,8 +246,8 @@ const styles = StyleSheet.create({
     top: "18.25%",
     right: "2.05%",
     bottom: "77.01%",
-    width: "10.26%",
-    height: "5.3%",
+    width: "11.26%",
+    height: "5.4%",
     position: "absolute",
   },
   stats: {
