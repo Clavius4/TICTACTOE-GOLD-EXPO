@@ -8,7 +8,7 @@
   <tr>
     <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s4.png" width="400"></td>
     <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s3.png" width="400"></td>
-    <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s2.png" width="400"></td>
+    <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s11.png" width="400"></td>
   </tr>
 </table>
 
