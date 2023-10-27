@@ -2,10 +2,15 @@
 
 ## Screenshots
 
-<p float="center">
-    <img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s4.png" width="800">
-     <img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s3.png" width="800">
-</p>
+## Screenshots
+
+<table style="width:100%">
+  <tr>
+    <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s4.png" width="400"></td>
+    <td><img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s3.png" width="400"></td>
+  </tr>
+</table>
+
 
 
 ### Expo
