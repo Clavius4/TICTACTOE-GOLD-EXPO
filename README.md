@@ -1,5 +1,12 @@
 # TICTACTOE-GOLD #
 
+## Screenshots
+
+<p float="center">
+    <img src="https://github.com/Clavius4/Personal-Portfolio-/blob/master/Screenshots/portfolio.png" width="800">
+</p>
+
+
 ### Expo
 
 The Expo version of the app is designed to streamline the development process and provides various tools and services for rapid development. To run the app in this variant, follow these steps:
@@ -21,3 +28,10 @@ This project is licensed under the [MIT License](LICENSE.md).
 Enjoy playing Tic-Tac-Toe on the larger 10x10 board and have fun developing with React Native!
 
 Feel free to add more details, installation instructions, screenshots, or any additional information that you find relevant to your project in your `readme.md` file.
+
+## Author
+
+👤 **PAUL THOMAS**
+
+* LinkedIn: [@paulthomas](https://www.linkedin.com/in/paulthomas)
+* GitHub: [@Clavius4](https://github.com/Clavius4)
