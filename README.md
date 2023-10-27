@@ -3,7 +3,8 @@
 ## Screenshots
 
 <p float="center">
-    <img src="https://github.com/Clavius4/Personal-Portfolio-/blob/master/Screenshots/portfolio.png" width="800">
+    <img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s4.png" width="800">
+     <img src="https://github.com/Clavius4/TICTACTOE-GOLD-EXPO/blob/master/Screenshots/s5.png" width="800">
 </p>
 
 
