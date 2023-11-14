@@ -34,6 +34,9 @@ Enjoy playing Tic-Tac-Toe on the larger 10x10 board and have fun developing with
 
 Feel free to add more details, installation instructions, screenshots, or any additional information that you find relevant to your project in your `readme.md` file.
 
+## Link to download the App:
+https://play.google.com/apps/internaltest/4701018822399391640
+
 ## Author
 
 👤 **PAUL THOMAS**
